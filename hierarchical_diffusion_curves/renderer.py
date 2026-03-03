@@ -44,3 +44,40 @@ def rasterize_curve(
                 image[:, y, x] = color
 
     return image
+
+def apply_diffusion(
+    image: torch.Tensor,
+    num_iterations: int = 100,
+    dt: float = 0.1
+) -> torch.Tensor:
+    """Apply Laplacian diffusion to spread colors
+
+    Args:
+        image: Input image (C, H, W)
+        num_iterations: Number of diffusion iterations
+        dt: Time step for diffusion
+
+    Returns:
+        Diffused image (C, H, W)
+    """
+    result = image.clone()
+
+    # Laplacian kernel
+    laplacian_kernel = torch.tensor([
+        [0, 1, 0],
+        [1, -4, 1],
+        [0, 1, 0]
+    ], dtype=image.dtype, device=image.device).view(1, 1, 3, 3)
+
+    for _ in range(num_iterations):
+        # Apply Laplacian to each channel
+        laplacian = torch.zeros_like(result)
+        for c in range(result.shape[0]):
+            channel = result[c:c+1].unsqueeze(0)
+            lap = F.conv2d(channel, laplacian_kernel, padding=1)
+            laplacian[c] = lap[0, 0]
+
+        # Update: I(t+1) = I(t) + dt * Laplacian(I)
+        result = result + dt * laplacian
+
+    return result
