@@ -1,4 +1,4 @@
-# Hierarchical Diffusion Curves Repliction
+# Hierarchical Diffusion Curves
 
 Implementation of "Hierarchical Diffusion Curves for Accurate Automatic Image Vectorization" for comparison experiments.
 
