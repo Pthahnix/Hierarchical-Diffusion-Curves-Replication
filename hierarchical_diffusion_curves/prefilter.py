@@ -23,3 +23,35 @@ def build_gaussian_pyramid(image: torch.Tensor, num_levels: int = 4) -> List[tor
         pyramid.append(current)
 
     return pyramid
+
+def build_laplacian_pyramid(gaussian_pyramid: List[torch.Tensor]) -> List[torch.Tensor]:
+    """Build Laplacian pyramid from Gaussian pyramid
+
+    Args:
+        gaussian_pyramid: List of Gaussian pyramid levels
+
+    Returns:
+        List of Laplacian images (difference between levels)
+    """
+    laplacian_pyramid = []
+
+    for i in range(len(gaussian_pyramid) - 1):
+        current = gaussian_pyramid[i]
+        next_level = gaussian_pyramid[i + 1]
+
+        # Upsample next level to current size
+        upsampled = F.interpolate(
+            next_level,
+            size=current.shape[2:],
+            mode='bilinear',
+            align_corners=False
+        )
+
+        # Laplacian = current - upsampled(next)
+        laplacian = current - upsampled
+        laplacian_pyramid.append(laplacian)
+
+    # Add the coarsest level as-is
+    laplacian_pyramid.append(gaussian_pyramid[-1])
+
+    return laplacian_pyramid
